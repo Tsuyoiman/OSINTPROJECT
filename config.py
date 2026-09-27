@@ -1,0 +1,4 @@
+LAB_IP = "192.168.100.7"
+LAB_PORT = 8000
+
+TARGET_URL = f"http://{LAB_IP}:{LAB_PORT}"
