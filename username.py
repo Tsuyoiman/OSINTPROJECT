@@ -5,6 +5,8 @@ Uses only publicly accessible pages/API endpoints exposed by the website.
 No authentication, no MongoDB access, no injection.
 """
 
+from urllib.parse import quote
+
 from connection import fetch_url, TARGET_URL
 
 
@@ -14,7 +16,8 @@ def investigate_username(username):
 
     The Facebook clone exposes public data through:
       - GET /publicProfile/<username>  (exact username handle, e.g. "megan_fox")
-      - GET /searchUsers?q=<text>      (fuzzy search by first/last name or username)
+      - GET /searchUsers?q=<text>      (search by first name, last name,
+        full name, username, or exact registration email)
 
     If the exact username lookup misses, this falls back to the search
     endpoint so a display name like "Megan Fox" can still resolve to the
@@ -22,6 +25,7 @@ def investigate_username(username):
     "Not publicly available".
     """
     result = {
+        "lookup": username,
         "username": username,
         "name": "Not publicly available",
         "bio": "Not publicly available",
@@ -43,7 +47,8 @@ def investigate_username(username):
     json_data = _get_public_profile(username)
 
     if json_data is None:
-        # Fall back to fuzzy search (handles display names / partial matches)
+        # Fall back to search so names and exact registration emails can
+        # resolve to the generated public username.
         match = _search_public_users(username)
         if match and match.get("username"):
             json_data = _get_public_profile(match["username"])
@@ -65,7 +70,7 @@ def search_users(query):
     exact username.
     """
     url = f"{TARGET_URL}/searchUsers"
-    resp = fetch_url(f"{url}?q={query}")
+    resp = fetch_url(f"{url}?q={quote(query, safe='')}")
     if resp is None or resp.status_code != 200:
         return []
     try:
@@ -77,7 +82,7 @@ def search_users(query):
 
 def _get_public_profile(username):
     """Call GET /publicProfile/<username> and return parsed JSON, or None."""
-    url = f"{TARGET_URL}/publicProfile/{username}"
+    url = f"{TARGET_URL}/publicProfile/{quote(username, safe='')}"
     resp = fetch_url(url)
     if resp is None or resp.status_code != 200:
         return None

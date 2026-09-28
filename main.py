@@ -35,8 +35,8 @@ def print_header():
 def print_menu():
     print("Menu:")
     print("  [1] Test Target Connection")
-    print("  [2] Search Public Users (by name/keyword)")
-    print("  [3] Investigate Username / View Full Profile")
+    print("  [2] Search Public Users (first name, last name, or both)")
+    print("  [3] Investigate Profile (username or registration email)")
     print("  [4] Correlate Friends & Organizations")
     print("  [5] Download Profile Images (for ExifTool)")
     print("  [6] Authorized Network Reconnaissance (Nmap)")
@@ -67,7 +67,7 @@ def test_connection():
 def search_users_menu():
     from username import search_users
 
-    query = input("Enter a name or keyword clue to search: ").strip()
+    query = input("Enter first name, last name, full name, or email: ").strip()
     if not query:
         print("Search query cannot be empty.")
         return
@@ -82,7 +82,7 @@ def search_users_menu():
     for r in results:
         name = f"{r.get('first_name', '')} {r.get('last_name', '')}".strip()
         print(f"  - {name} (@{r.get('username')})")
-    print("Use option 3 with one of the usernames above to view the full profile.")
+    print("Use option 3 with a displayed username or the registration email.")
 
 
 def investigate_profile_menu(state):
@@ -94,12 +94,38 @@ def investigate_profile_menu(state):
         state["primary_username"] = data["username"]
 
 
+def profile_for_action(state, action):
+    """Return a profile selected for a correlation or image action."""
+    from profile import render_profile
+    from username import investigate_username
+
+    previous = state.get("last_profile")
+    prompt = (
+        f"Enter username, full name, or registration email for {action} "
+        "(press Enter to use the last profile): "
+    )
+    identifier = input(prompt).strip()
+    if not identifier:
+        if previous:
+            return previous
+        print("[-] No profile selected. Enter a username, name, or email.")
+        return None
+
+    data = investigate_username(identifier)
+    render_profile(data)
+    if not data.get("found"):
+        return None
+
+    state["last_profile"] = data
+    state["primary_username"] = data["username"]
+    return data
+
+
 def correlate_menu(state):
     from connections import find_related_profiles
 
-    profile = state.get("last_profile")
+    profile = profile_for_action(state, "correlation")
     if not profile:
-        print("[-] Investigate a profile first (option 3).")
         return
 
     print(f"[+] Exploring public friends of @{profile['username']}...")
@@ -129,9 +155,8 @@ def download_images_menu(state):
     from images import download_profile_images, run_exiftool
     from evidence import add_entry
 
-    profile = state.get("last_profile")
+    profile = profile_for_action(state, "image download")
     if not profile:
-        print("[-] Investigate a profile first (option 3).")
         return
 
     saved = download_profile_images(profile)

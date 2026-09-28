@@ -309,23 +309,74 @@ same instructor laptop.
 
 Confirms that Kali can reach the public API.
 
-### Option 2 — Search Public Users
+### Option 2 — Search Public Users by Name or Email
 
-Search by a display name, partial name, or username:
+Search by a first name, last name, full name, username, or registration
+email:
 
 ```text
-Megan Fox
+Emman
+Casimsiman
+Emman Casimsiman
+casimsimanemman@gmail.com
 ```
 
 The search returns public usernames. Use the returned handle in option 3.
 
-### Option 3 — Investigate Username / View Full Profile
+#### Searching newly created student accounts
+
+New registrations are stored in the same backend database and are included
+by the public `/searchUsers` route. Students should search using the name
+they entered during registration, for example:
+
+```text
+First name: Maria
+Last name: Santos
+Search: Maria
+```
+
+The registration form generates the username automatically. Students should
+not assume that their email address is their username. Search by the first
+name, last name, full name, or exact registration email, then copy the
+displayed `@username` into option 3.
+
+If the website launcher selected a different port because `8000` was already
+busy, the API printed in the Windows terminal is authoritative. Update
+`LAB_PORT` in `config.py` to that API port and restart `./osint-lab`.
+
+Verify a newly created account directly from Kali before troubleshooting the
+Python client:
+
+```bash
+curl -i "http://<laptop-ip>:<api-port>/searchUsers?q=Maria"
+```
+
+If this returns the new account, the website and network are working; update
+the Kali client configuration or search using the generated username. If it
+returns an empty list, confirm that the account registration completed
+successfully and that the Windows website and Kali client point to the same
+IP address, API port, and running backend instance.
+
+### Option 3 — Investigate Username or Registration Email
 
 Enter the exact fictional username:
 
 ```text
 megan_fox
 ```
+
+An email address can also be entered directly:
+
+```text
+casimsimanemman@gmail.com
+```
+
+The client uses the email only to resolve the account's generated public
+username, then retrieves the public profile. The email is not displayed as
+profile data.
+
+This requires the updated Facebook lab backend search route. Restart the
+Windows server after applying the backend change.
 
 The tool displays publicly exposed information such as:
 
@@ -346,17 +397,25 @@ The tool also records the result in the current evidence log.
 
 ### Option 4 — Correlate Friends and Organizations
 
-Investigate a profile first, then select option 4. The tool pivots through
-the profile's public friends and retrieves their public profiles. It reports
-related usernames, workplaces, and shared organizations.
+Select option 4 and enter a username, full name, or registration email:
+
+```text
+Emman Casimsiman
+```
+
+Press Enter without typing anything to reuse the last profile. The tool
+pivots through the selected profile's public friends and retrieves their
+public profiles. It reports related usernames, workplaces, and shared
+organizations.
 
 This demonstrates the central OSINT lesson: several individually harmless
 public facts can become more informative when correlated.
 
 ### Option 5 — Download Profile Images
 
-Investigate a profile first, then select option 5. Publicly served profile
-and cover images are saved under:
+Select option 5 and enter a username, full name, or registration email.
+Press Enter to reuse the last profile. Publicly served profile and cover
+images are saved under:
 
 ```text
 output/images/<username>/

@@ -8,14 +8,14 @@ from evidence import add_entry
 
 
 def show_profile_menu():
-    """Prompt for a username and display whatever the website exposes."""
-    username = input("Enter fictional username: ").strip()
-    if not username:
+    """Prompt for a username/email and display public profile data."""
+    identifier = input("Enter username or registration email: ").strip()
+    if not identifier:
         print("Username cannot be empty.")
         return None
 
     print("[+] Retrieving public profile...")
-    data = investigate_username(username)
+    data = investigate_username(identifier)
     render_profile(data)
     return data
 
@@ -28,9 +28,9 @@ def render_profile(data):
     print("=" * 50)
 
     if not data.get("found"):
-        print(f"[-] No public profile found for '{data['username']}'.")
-        print("    Try the exact username handle (e.g. 'megan_fox') or use")
-        print("    option 2 to search by name/keyword first.")
+        print(f"[-] No public profile found for '{data['lookup']}'.")
+        print("    Try the generated username, registration email, or")
+        print("    option 2 to search by first/last/full name.")
         print("=" * 50)
         return
 
