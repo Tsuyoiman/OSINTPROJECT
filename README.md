@@ -27,11 +27,20 @@ There are two separate projects:
    on the instructor's Windows computer.
 2. **OSINTPROJECT** — this Python client running on the student's Kali VM.
 
-The default classroom target is:
+The default classroom API target is:
 
 ```text
 http://192.168.100.7:8000
 ```
+
+The browser-facing React website uses the frontend port:
+
+```text
+http://192.168.100.7:3000
+```
+
+Use port `3000` in Firefox. Use port `8000` for the Python OSINT client and
+its API requests.
 
 The Express backend intentionally has no route at `/`. Therefore this is
 normal:
@@ -43,7 +52,34 @@ GET /       -> 404 Cannot GET /
 An HTTP 404 response from `/` still proves that a web server answered. This
 client tests `/searchUsers?q=a` instead.
 
-## 2. Requirements before using Kali
+## 2. Start the website on the instructor laptop
+
+On the Windows laptop that contains `Facebook-and-Osint-Lab`, open
+PowerShell and run:
+
+```powershell
+cd C:\Users\TSUYOIMAN\Desktop\OSINT2\Facebook-and-Osint-Lab
+npm install
+npm start
+```
+
+The launcher starts both services and prints addresses similar to:
+
+```text
+on this machine:  http://localhost:3000
+on Wi-Fi:        http://192.168.100.7:3000
+api:             http://192.168.100.7:8000
+```
+
+Keep this PowerShell window open while students use the lab. The printed
+LAN address is the address students should use; do not assume that
+`192.168.100.7` is permanent.
+
+If the launcher selects a different port because `3000` or `8000` is busy,
+use the exact frontend and API ports printed in the terminal. Update
+`LAB_PORT` in this project accordingly before starting the Kali client.
+
+## 3. Requirements before using Kali
 
 The instructor must first start the fictional website on Windows. The
 backend must listen on all network interfaces, not only localhost:
@@ -62,7 +98,7 @@ mode appropriate for the classroom:
 Windows Firewall must allow inbound TCP port `8000` for the authorized
 classroom network. Do not expose the fictional lab to the public Internet.
 
-## 3. Find the target address
+## 4. Find the target address
 
 The default address is `192.168.100.7`, but the instructor's address may
 change. On Windows, find the IPv4 address with:
@@ -87,7 +123,7 @@ curl -i "http://192.168.100.7:8000/searchUsers?q=Megan"
 An HTTP response means Kali can reach the server. A timeout or connection
 refusal indicates a server, firewall, VMware networking, IP, or port problem.
 
-## 4. Clone the project on Kali
+## 5. Clone the project on Kali
 
 Open a terminal in Kali and run:
 
@@ -122,7 +158,7 @@ osint-lab
 requirements.txt
 ```
 
-## 5. Configure the target
+## 6. Configure the target
 
 Open the configuration file:
 
@@ -130,7 +166,8 @@ Open the configuration file:
 nano config.py
 ```
 
-Set these values to the instructor's Windows server:
+Set these values to the instructor laptop's current LAN address and API
+port. Use the address printed by `npm start`:
 
 ```python
 LAB_IP = "192.168.100.7"
@@ -141,9 +178,9 @@ FRONTEND_PORT = 3000
 Save in nano with `Ctrl+O`, press `Enter`, then exit with `Ctrl+X`.
 
 The backend API normally runs on port `8000`. The React frontend normally
-runs on port `3000` and serves profile images.
+runs on port `3000` and serves the browser interface and profile images.
 
-## 6. Install the Kali dependencies
+## 7. Install the Kali dependencies
 
 Make the scripts executable:
 
@@ -198,7 +235,7 @@ Third-party repository errors, such as an expired WineHQ signing key, are
 unrelated to this project. The Python fallback may still be usable even when
 an optional package installation fails.
 
-## 7. Start the investigation client
+## 8. Start the investigation client
 
 Preferred launch command:
 
@@ -216,7 +253,7 @@ python3 main.py
 If a virtual environment was successfully created, the launcher uses it
 automatically. Otherwise it uses Kali's `python3`.
 
-## 8. Test the connection
+## 9. Test the connection
 
 At the menu, select:
 
@@ -243,7 +280,30 @@ You can test a known fictional profile:
 curl -i "http://192.168.100.7:8000/publicProfile/megan_fox"
 ```
 
-## 9. Use the investigation workflow
+## 10. Open the website in Kali Firefox
+
+On each Kali computer, open Firefox and visit:
+
+```text
+http://192.168.100.7:3000
+```
+
+Replace `192.168.100.7` with the instructor laptop's current LAN address.
+Do not use `localhost` or `127.0.0.1` in Kali: those refer to the Kali VM
+itself, not the Windows laptop.
+
+If the page does not load, test both services from Kali:
+
+```bash
+curl -i "http://192.168.100.7:3000"
+curl -i "http://192.168.100.7:8000/searchUsers?q=Megan"
+```
+
+The first command should return the React page. The second should return an
+HTTP API response. If both work, Firefox and the OSINT client can use the
+same instructor laptop.
+
+## 11. Use the investigation workflow
 
 ### Option 1 — Test Target Connection
 
@@ -363,7 +423,7 @@ The report contains these 17 sections:
 16. Ethical considerations
 17. Conclusion
 
-## 10. Example complete session
+## 12. Example complete session
 
 ```text
 cd ~/OSINTPROJECT
@@ -388,7 +448,7 @@ Inside the program:
 
 The generated evidence and reports remain local to the Kali project folder.
 
-## 11. Troubleshooting
+## 13. Troubleshooting
 
 ### `requirements.txt` cannot be opened
 
@@ -419,6 +479,30 @@ python3 -m pip install --break-system-packages -r requirements.txt
 ./osint-lab
 ```
 
+### Other PCs cannot open the website
+
+On the Windows laptop, confirm that the server terminal printed a LAN URL,
+not only a localhost URL. Then check the Windows firewall. Run PowerShell as
+Administrator and allow the classroom ports:
+
+```powershell
+New-NetFirewallRule -DisplayName "Classroom Facebook Lab Frontend" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private
+New-NetFirewallRule -DisplayName "Classroom Facebook Lab API" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8000 -Profile Private
+```
+
+Use these rules only on the private classroom network. Remove them after the
+exercise if the laptop is returned to an untrusted network:
+
+```powershell
+Remove-NetFirewallRule -DisplayName "Classroom Facebook Lab Frontend"
+Remove-NetFirewallRule -DisplayName "Classroom Facebook Lab API"
+```
+
+Confirm that every PC is connected to the same reachable LAN/VLAN. A guest
+Wi-Fi network may intentionally block device-to-device traffic. If the
+classroom uses VMware host-only networking, use the Windows host-only adapter
+address printed or identified for that network rather than the Wi-Fi address.
+
 ### Browser cannot connect, but curl works
 
 Check the exact URL and port:
@@ -441,6 +525,19 @@ Check all of the following:
 4. The Windows firewall allows TCP `8000`.
 5. Kali and Windows are on reachable VMware networks.
 6. `LAB_IP` in `config.py` is current.
+
+### Website loads, but the frontend cannot reach the API
+
+The browser must receive the API address at startup. Stop the website, then
+restart it from the project root with the normal command:
+
+```powershell
+npm start
+```
+
+The launcher discovers the laptop's LAN address and passes it to the React
+frontend. Do not start the frontend separately with a hard-coded
+`REACT_APP_BACKEND_URL=http://localhost:8000` when other PCs need access.
 
 ### Profile lookup returns no data
 
@@ -467,7 +564,7 @@ sudo apt install -y nmap libimage-exiftool-perl
 
 The profile search and report features do not require these optional tools.
 
-## 12. Ethical and authorization rules
+## 14. Ethical and authorization rules
 
 This laboratory is limited to fictional classroom data and the
 instructor-authorized network. Students must not:
