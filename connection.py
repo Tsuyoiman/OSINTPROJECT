@@ -30,12 +30,19 @@ def get_session():
 def check_connection():
     """
     Test whether the target website is reachable.
+
+    The backend is an Express API with no route at "/", so a plain GET on
+    TARGET_URL always returns 404 even when the server is healthy. Instead,
+    hit a known public, unauthenticated endpoint ("/searchUsers") and treat
+    any HTTP response (not just 200) as evidence the server is up.
+
     Returns (reachable: bool, status_code: int | None, reason: str | None)
     """
     session = get_session()
+    probe_url = f"{TARGET_URL}/searchUsers?q=a"
     try:
-        resp = session.get(TARGET_URL, timeout=REQUEST_TIMEOUT, allow_redirects=True)
-        if resp.status_code == 200:
+        resp = session.get(probe_url, timeout=REQUEST_TIMEOUT, allow_redirects=True)
+        if resp.status_code < 500:
             return True, resp.status_code, None
         return False, resp.status_code, f"HTTP {resp.status_code}"
     except requests.exceptions.Timeout:
