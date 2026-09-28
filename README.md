@@ -60,7 +60,7 @@ PowerShell and run:
 ```powershell
 cd C:\Users\TSUYOIMAN\Desktop\OSINT2\Facebook-and-Osint-Lab
 npm install
-npm start
+npm run dev
 ```
 
 The launcher starts both services and prints addresses similar to:
@@ -167,7 +167,7 @@ nano config.py
 ```
 
 Set these values to the instructor laptop's current LAN address and API
-port. Use the address printed by `npm start`:
+port. Use the address printed by `npm run dev`:
 
 ```python
 LAB_IP = "192.168.100.7"
@@ -591,7 +591,7 @@ The browser must receive the API address at startup. Stop the website, then
 restart it from the project root with the normal command:
 
 ```powershell
-npm start
+npm run dev
 ```
 
 The launcher discovers the laptop's LAN address and passes it to the React
