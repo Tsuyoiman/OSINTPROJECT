@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# osint-lab - Launcher for the Classroom OSINT Investigation Tool.
+#
+# Usage (from anywhere once installed):
+#   osint-lab
+#
+# This script locates the project directory (wherever it was cloned) and
+# runs the tool with the system python3, so students never need to
+# remember a virtualenv path.
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$DIR"
+
+PYTHON_BIN="python3"
+if [ -x "$DIR/.venv/bin/python" ]; then
+    PYTHON_BIN="$DIR/.venv/bin/python"
+fi
+
+exec "$PYTHON_BIN" main.py "$@"

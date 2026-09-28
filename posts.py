@@ -1,17 +1,19 @@
 """
-posts.py - Placeholder for future post-scraping functionality.
+posts.py - Formats the public posts already included in a profile lookup.
+
+The backend does not expose a separate "/api/posts" endpoint; public posts
+for a profile are returned inline by GET /publicProfile/<username> (subject
+to that user's privacy settings). This module just renders them.
 """
 
-from connection import fetch_url, TARGET_URL
 
-
-def fetch_public_posts(username):
-    """Fetch public posts for a username (future use)."""
-    url = f"{TARGET_URL}/api/posts/{username}"
-    resp = fetch_url(url)
-    if resp is None:
-        return []
-    try:
-        return resp.json()
-    except ValueError:
-        return []
+def format_posts(profile):
+    """Return a list of printable post strings from an investigated profile."""
+    lines = []
+    for i, post in enumerate(profile.get("posts") or [], 1):
+        if isinstance(post, str):
+            text = post
+        else:
+            text = post.get("text") or "(no text - image/background post)"
+        lines.append(f"{i}. {text}")
+    return lines

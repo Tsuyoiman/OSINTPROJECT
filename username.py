@@ -31,8 +31,13 @@ def investigate_username(username):
         "city": "Not publicly available",
         "hometown": "Not publicly available",
         "organizations": "Not publicly available",
+        "clues": [],
         "posts": [],
         "connections": "Not publicly available",
+        "friends": [],
+        "picture": None,
+        "cover": None,
+        "found": False,
     }
 
     json_data = _get_public_profile(username)
@@ -44,9 +49,30 @@ def investigate_username(username):
             json_data = _get_public_profile(match["username"])
 
     if json_data:
+        result["found"] = True
         _populate_from_json(result, json_data)
 
     return result
+
+
+def search_users(query):
+    """
+    Public search step: GET /searchUsers?q=<query>.
+
+    Returns a list of lightweight match dicts (first_name, last_name,
+    username, ...) as exposed by the backend. Used when the student only
+    has a partial clue (a name, a project, an organization) rather than an
+    exact username.
+    """
+    url = f"{TARGET_URL}/searchUsers"
+    resp = fetch_url(f"{url}?q={query}")
+    if resp is None or resp.status_code != 200:
+        return []
+    try:
+        data = resp.json()
+    except ValueError:
+        return []
+    return data if isinstance(data, list) else []
 
 
 def _get_public_profile(username):
@@ -62,18 +88,9 @@ def _get_public_profile(username):
 
 
 def _search_public_users(query):
-    """Call GET /searchUsers?q=<query> and return the first match, or None."""
-    url = f"{TARGET_URL}/searchUsers"
-    resp = fetch_url(f"{url}?q={query}")
-    if resp is None or resp.status_code != 200:
-        return None
-    try:
-        data = resp.json()
-    except ValueError:
-        return None
-    if isinstance(data, list) and data:
-        return data[0]
-    return None
+    """Return the first fuzzy-search match, or None."""
+    matches = search_users(query)
+    return matches[0] if matches else None
 
 
 def _populate_from_json(result, data):
@@ -105,10 +122,25 @@ def _populate_from_json(result, data):
     organizations = simulation.get("organizations")
     if isinstance(organizations, list) and organizations:
         result["organizations"] = ", ".join(organizations)
+        result["organizations_list"] = organizations
+    else:
+        result["organizations_list"] = []
+
+    clues = simulation.get("clues")
+    if isinstance(clues, list):
+        result["clues"] = clues
 
     friends = data.get("friends")
     if isinstance(friends, list):
         result["connections"] = str(len(friends))
+        # Keep the raw friend records (username/name/picture) so the
+        # correlation feature can pivot into each related public profile.
+        result["friends"] = friends
+
+    if data.get("picture"):
+        result["picture"] = data["picture"]
+    if data.get("cover"):
+        result["cover"] = data["cover"]
 
     posts = data.get("posts")
     if isinstance(posts, list):
