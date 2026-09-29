@@ -292,6 +292,20 @@ Replace `192.168.100.7` with the instructor laptop's current LAN address.
 Do not use `localhost` or `127.0.0.1` in Kali: those refer to the Kali VM
 itself, not the Windows laptop.
 
+### Firefox proxy setting
+
+If Firefox reports **"Unable to find the proxy server"**, disable its proxy
+before opening the classroom website:
+
+1. Open the Firefox menu and select **Settings**.
+2. Search for **network**.
+3. Under **Network Settings**, click **Settings...**.
+4. Select **No proxy** and click **OK**.
+
+Use a manual proxy only when an authorized proxy tool is running and its
+address and port are configured correctly. For this classroom lab, **No
+proxy** is normally required.
+
 If the page does not load, test both services from Kali:
 
 ```bash
