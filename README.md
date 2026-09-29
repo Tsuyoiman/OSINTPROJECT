@@ -7,6 +7,57 @@ The client communicates only with the instructor's fictional web application
 through public HTTP endpoints. It does not log in, bypass authentication,
 access MongoDB, extract private messages, or target real people.
 
+## Quick start
+
+Follow these steps when setting up a new Kali VM:
+
+1. Start `Facebook-and-Osint-Lab` on the instructor's Windows computer with
+   `npm run dev`.
+2. Copy the Windows LAN IP and ports printed by the launcher. Do not use
+   `localhost` from Kali.
+3. Clone this repository in Kali:
+
+   ```bash
+   cd ~
+   git clone https://github.com/Tsuyoiman/OSINTPROJECT.git
+   cd OSINTPROJECT
+   ```
+
+4. Set the Windows address in `config.py`:
+
+   ```python
+   LAB_IP = "<WINDOWS_LAN_IP>"
+   LAB_PORT = 8000
+   FRONTEND_PORT = 3000
+   ```
+
+   Replace `<WINDOWS_LAN_IP>` and update either port if the Windows launcher
+   printed different values.
+
+5. Install and start the client:
+
+   ```bash
+   chmod +x install.sh osint-lab
+   ./install.sh
+   ./osint-lab
+   ```
+
+6. Select **1 - Test Target Connection**, then **2 - Search Public Users**.
+
+Before starting the client, verify the API directly:
+
+```bash
+curl -i "http://<WINDOWS_LAN_IP>:8000/searchUsers?q=Megan"
+```
+
+If the repository is already present in Kali, update it instead of cloning it
+again:
+
+```bash
+cd ~/OSINTPROJECT
+git pull
+```
+
 The lab demonstrates this investigation chain:
 
 ```text
@@ -27,20 +78,22 @@ There are two separate projects:
    on the instructor's Windows computer.
 2. **OSINTPROJECT** — this Python client running on the student's Kali VM.
 
-The default classroom API target is:
+The classroom API target uses the Windows LAN IP and the API port printed by
+the instructor's launcher. For example:
 
 ```text
-http://192.168.100.7:8000
+http://<WINDOWS_LAN_IP>:8000
 ```
 
 The browser-facing React website uses the frontend port:
 
 ```text
-http://192.168.100.7:3000
+http://<WINDOWS_LAN_IP>:3000
 ```
 
-Use port `3000` in Firefox. Use port `8000` for the Python OSINT client and
-its API requests.
+Use the actual frontend port in Firefox and the actual API port for the
+Python OSINT client. The launcher may select another port when the default
+port is already busy.
 
 The Express backend intentionally has no route at `/`. Therefore this is
 normal:
@@ -58,7 +111,7 @@ On the Windows laptop that contains `Facebook-and-Osint-Lab`, open
 PowerShell and run:
 
 ```powershell
-cd C:\Users\TSUYOIMAN\Desktop\OSINT2\Facebook-and-Osint-Lab
+cd C:\path\to\Facebook-and-Osint-Lab
 npm install
 npm run dev
 ```
@@ -67,13 +120,13 @@ The launcher starts both services and prints addresses similar to:
 
 ```text
 on this machine:  http://localhost:3000
-on Wi-Fi:        http://192.168.100.7:3000
-api:             http://192.168.100.7:8000
+on Wi-Fi:        http://<WINDOWS_LAN_IP>:3000
+api:             http://<WINDOWS_LAN_IP>:8000
 ```
 
 Keep this PowerShell window open while students use the lab. The printed
 LAN address is the address students should use; do not assume that
-`192.168.100.7` is permanent.
+`<WINDOWS_LAN_IP>` is permanent.
 
 If the launcher selects a different port because `3000` or `8000` is busy,
 use the exact frontend and API ports printed in the terminal. Update
@@ -100,8 +153,7 @@ classroom network. Do not expose the fictional lab to the public Internet.
 
 ## 4. Find the target address
 
-The default address is `192.168.100.7`, but the instructor's address may
-change. On Windows, find the IPv4 address with:
+The instructor's address may change. On Windows, find the IPv4 address with:
 
 ```powershell
 ipconfig
@@ -111,13 +163,13 @@ Look for the adapter used by the VMware network. On Kali, verify basic
 reachability:
 
 ```bash
-ping -c 3 192.168.100.7
+ping -c 3 <WINDOWS_LAN_IP>
 ```
 
 If ping is disabled, test the API directly instead:
 
 ```bash
-curl -i "http://192.168.100.7:8000/searchUsers?q=Megan"
+curl -i "http://<WINDOWS_LAN_IP>:8000/searchUsers?q=Megan"
 ```
 
 An HTTP response means Kali can reach the server. A timeout or connection
@@ -138,6 +190,24 @@ If the project is already cloned, update it instead:
 ```bash
 cd ~/OSINTPROJECT
 git pull
+```
+
+If `git clone` reports `Could not resolve host: github.com`, Kali cannot
+resolve GitHub's DNS name. Check the network before changing the project:
+
+```bash
+ping -c 3 1.1.1.1
+getent hosts github.com
+```
+
+If the IP ping works but the DNS lookup fails, check the Kali network/DNS
+configuration. If both fail, fix the VMware network connection or use a
+VMware shared folder to copy the repository from a machine with Internet
+access. The repository URL must be the actual URL below; do not paste
+Copilot reference markup into the command:
+
+```bash
+git clone https://github.com/Tsuyoiman/OSINTPROJECT.git
 ```
 
 Confirm that the required files exist:
@@ -170,7 +240,7 @@ Set these values to the instructor laptop's current LAN address and API
 port. Use the address printed by `npm run dev`:
 
 ```python
-LAB_IP = "192.168.100.7"
+LAB_IP = "<WINDOWS_LAN_IP>"
 LAB_PORT = 8000
 FRONTEND_PORT = 3000
 ```
@@ -271,13 +341,13 @@ A successful result looks similar to:
 You can test the same endpoint manually:
 
 ```bash
-curl -i "http://192.168.100.7:8000/searchUsers?q=Megan"
+curl -i "http://<WINDOWS_LAN_IP>:8000/searchUsers?q=Megan"
 ```
 
 You can test a known fictional profile:
 
 ```bash
-curl -i "http://192.168.100.7:8000/publicProfile/megan_fox"
+curl -i "http://<WINDOWS_LAN_IP>:8000/publicProfile/megan_fox"
 ```
 
 ## 10. Open the website in Kali Firefox
@@ -285,10 +355,10 @@ curl -i "http://192.168.100.7:8000/publicProfile/megan_fox"
 On each Kali computer, open Firefox and visit:
 
 ```text
-http://192.168.100.7:3000
+http://<WINDOWS_LAN_IP>:3000
 ```
 
-Replace `192.168.100.7` with the instructor laptop's current LAN address.
+Replace `<WINDOWS_LAN_IP>` with the instructor laptop's current LAN address.
 Do not use `localhost` or `127.0.0.1` in Kali: those refer to the Kali VM
 itself, not the Windows laptop.
 
@@ -309,8 +379,8 @@ proxy** is normally required.
 If the page does not load, test both services from Kali:
 
 ```bash
-curl -i "http://192.168.100.7:3000"
-curl -i "http://192.168.100.7:8000/searchUsers?q=Megan"
+curl -i "http://<WINDOWS_LAN_IP>:3000"
+curl -i "http://<WINDOWS_LAN_IP>:8000/searchUsers?q=Megan"
 ```
 
 The first command should return the React page. The second should return an
@@ -448,11 +518,12 @@ Use this option only against the authorized classroom target or another
 address inside the authorized network:
 
 ```text
-192.168.100.0/24
+<AUTHORIZED_NETWORK_CIDR>
 ```
 
-The tool refuses targets outside that range. The default target is
-`192.168.100.7`.
+The tool refuses targets outside the configured authorized network. Set
+`AUTHORIZED_NETWORK` in `config.py` to the instructor-approved network before
+using this option.
 
 Install Nmap if necessary:
 
@@ -514,7 +585,7 @@ Inside the program:
 3 -> megan_fox
 4
 5
-6 -> 192.168.100.7
+6 -> <AUTHORIZED_TARGET_IP>
 7
 8
 ```
@@ -581,7 +652,7 @@ address printed or identified for that network rather than the Wi-Fi address.
 Check the exact URL and port:
 
 ```text
-http://192.168.100.7:8000/publicProfile/megan_fox
+http://<WINDOWS_LAN_IP>:8000/publicProfile/megan_fox
 ```
 
 Do not rely on the root URL `/`, because the API intentionally returns 404
