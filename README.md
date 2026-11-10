@@ -14,8 +14,9 @@ Follow these steps when setting up a new Kali VM:
 1. Start `Facebook-and-Osint-Lab` on the instructor's Windows computer with
    `npm run dev`.
 2. Copy the Windows LAN IP and ports printed by the launcher. Do not use
-   `localhost` from Kali.
-3. Clone this repository in Kali:
+   `localhost` 
+3. Change the network adapters inside the Kali VMware settings to `NAT`. 
+Then Clone this repository in Kali:
 
    ```bash
    cd ~
