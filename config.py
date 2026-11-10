@@ -6,7 +6,7 @@ instance for your classroom session.
 """
 
 # Address of the authorized fictional Facebook-clone lab target.
-LAB_IP = "10.3.3.171"
+LAB_IP = "10.3.3.161"
 LAB_PORT = 8000
 FRONTEND_PORT = 3001
 
